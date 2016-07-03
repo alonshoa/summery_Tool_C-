@@ -5,18 +5,16 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace WindowsFormsApplication2
+namespace nSummerizeTool
 {
-    interface ISummery
-    {
-
-    }
+    
     public class SummeryTool
     {
-        private readonly char[] sentenceDelimiters = new char[] { '.' };
+       private readonly char[] sentenceDelimiters = new char[] { '.' };
         private readonly string[] paragraphDlimiters = new string[] { "\n\n" };
         private readonly char[] wordsDelimiters = new char[] { ' ' };
         private double avgWords;
+        
         
         public SummeryTool()
         {
@@ -76,15 +74,14 @@ namespace WindowsFormsApplication2
         string[] formatSentence(string[] sentence)
         {
             Regex rgx = new Regex("[^a-zA-Z0-9 -]");
+
             return sentence.AsParallel().Select(X => rgx.Replace(X, "")).ToArray();
         }
 
-        Dictionary<string, double> GetSentencesRank(string Content)
+        public Dictionary<string, double> GetSentencesRank(string Content)
         {
             var res = new Dictionary<string, double>();
             string[] sentences;
-
-
 
             sentences = splitToSentences(Content);
             int len = sentences.Length;
@@ -107,11 +104,23 @@ namespace WindowsFormsApplication2
             return res;
         }
 
-        public string[] Summerize(string content)
+        public string[] ThresholdSummerize(string content)
         {
             var sentancesWithRank = GetSentencesRank(content);
 
             return SummerizeByThreshold(sentancesWithRank, 0.2);
+        }
+
+        public string Summerize(string content)
+        {
+            var parag = splitToParagraphs(content);
+            StringBuilder sb = new StringBuilder();
+            foreach (var par in parag )
+            {
+                sb.Append(GetSentencesRank(par).OrderByDescending(x => x.Value).First().Key + "\n");
+            }
+
+            return sb.ToString();
         }
 
         private string[] SummerizeByThreshold(Dictionary<string, double> sentancesWithRank, double p)
@@ -122,6 +131,25 @@ namespace WindowsFormsApplication2
 
         }
 
+        public string mergeStringsToParagraph(string[] content)
+        {
+            StringBuilder sb = new StringBuilder();
+            int counter = 0;
+            for (int i= 0 ; i< content.Length ; i++)
+            {
+                var words = splitToWods(content[i]);
+                for (int j = 0; j < words.Length; j++)
+                {
+                    sb.Append(words[j]);
+                    if (++counter % 6 == 0)
+                        sb.Append(".");
+                    sb.Append(" ");
+
+                }
+
+            }
+            return sb.ToString();
+        }
 
     }
 }
